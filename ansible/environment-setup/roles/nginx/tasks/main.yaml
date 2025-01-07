@@ -1,0 +1,41 @@
+---
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: latest
+    update_cache: yes
+
+- name: Creating a new directory for custom page
+  file:
+    path: /var/www/{{hostName}}/html
+    state: directory
+    mode: '0755'
+
+- name: Copy the custom page to the new directory
+  copy:
+    src: "{{ role_path }}/files/index.html"
+    dest: /var/www/{{hostName}}/html/
+
+- name: Remove default nginx configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Add nginx configuration
+  template:
+    src: "{{ role_path }}/templates/static-site-config.j2"
+    dest: "/etc/nginx/sites-available/static-site-config"
+    mode: '0644'
+
+- name: Enable website configuration
+  file:
+    src: /etc/nginx/sites-available/static-site-config
+    dest: /etc/nginx/sites-enabled/static-site-config
+    state: link
+
+- name: Ensure nginx is running
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
