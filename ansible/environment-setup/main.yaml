@@ -1,0 +1,12 @@
+---
+- hosts: server1
+  become: True
+  roles:
+    # - docker
+    # - kind-cluster
+    # - nginx
+    # - node-exporter
+    # - prometheus-grafana
+    # - docker-image-registry
+    # - gitlab-runner
+    - iptables-config
