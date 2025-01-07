@@ -1,0 +1,45 @@
+---
+
+- name: Add GPG apt keys
+  apt_key:
+    url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
+    keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: present
+  become: true
+  tags:
+    - install
+
+- name: Add repositories
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+    state: present
+  become: true
+  tags:
+    - install
+
+- name: Install prerequisite Packages
+  apt:
+    name: "{{ required_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  tags:
+    - install
+
+- name: Update apt and install docker-ce
+  apt:
+    name: "{{ docker_packages }}"
+    state: latest
+    update_cache: true
+  become: true
+  tags:
+    - install
+
+- name: Add docker group to users {{ ansible_user }} groups
+  user:
+    name: "{{ ansible_user }}"
+    append: true
+    groups: docker
+  become: true
+  tags:
+    - install

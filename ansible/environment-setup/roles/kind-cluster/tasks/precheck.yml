@@ -1,0 +1,18 @@
+---
+
+- name: Get latest kind release
+  uri:
+    url: "{{ kind_git }}/releases/latest"
+    return_content: true
+    body_format: json
+  register: kind_latest_release
+  when: kind_version == 'latest'
+  tags:
+    - install
+
+- name: Set version to install
+  set_fact:
+    kind_version: "{{ kind_latest_release.json.tag_name }}"
+  when: kind_version == 'latest'
+  tags:
+    - install
