@@ -1,0 +1,22 @@
+---
+
+- name: Creating a new directory for config file
+  file:
+    path: /etc/prometheus
+    state: directory
+    mode: '0755'
+
+- name: Copy Prometheus config file
+  template:
+    src: "{{ role_path }}/templates/prometheus.yml.j2"
+    dest: /etc/prometheus/prometheus.yml
+
+- name: Copy Docker Compose file
+  copy:
+    src: "{{ role_path }}/templates/docker-compose.yaml"
+    dest: /root/docker-compose.yml
+
+- name: Start Docker Compose stack
+  command: docker compose up -d
+  args:
+    chdir: /root
