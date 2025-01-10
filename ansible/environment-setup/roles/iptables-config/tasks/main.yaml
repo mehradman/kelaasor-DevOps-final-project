@@ -1,0 +1,74 @@
+---
+
+- name: Install ipset
+  package:
+    name: ipset
+    state: present
+
+- name: Create ipset for blocking IPs
+  command: ipset create ssh_block_set hash:ip
+  ignore_errors: yes
+
+- name: Add IPs to ipset
+  loop:
+    - 10.10.10.1
+    - 10.10.10.2
+    - 10.10.10.3
+    - 10.10.10.4
+  command: ipset add ssh_block_set {{ item }}
+  ignore_errors: yes
+
+- name: Add iptables rule to block SSH from IP set
+  iptables:
+    chain: INPUT
+    match_set: "ssh_block_set"
+    match_set_flags: src
+    protocol: tcp
+    destination_port: 22
+    jump: DROP
+
+- name: Find Docker subnet
+  command: docker network inspect bridge
+  register: docker_network
+
+- name: Parse Docker subnet
+  set_fact:
+    docker_subnet: "{{ docker_network.stdout | from_json | json_query('[0].IPAM.Config[0].Subnet') }}"
+
+- name: Allow Docker subnet to access port 9100
+  iptables:
+    chain: INPUT
+    source: "{{ docker_subnet }}"
+    protocol: tcp
+    destination_port: 9100
+    jump: ACCEPT
+
+- name: Block all other access to port 9100
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 9100
+    jump: DROP
+
+# - name: Allow other internal services
+#   iptables:
+#     chain: INPUT
+#     protocol: tcp
+#     destination_ports:
+#       - 80
+#       - 443
+#       - 22
+#       - 3000
+#     jump: ACCEPT
+    
+
+# - name: Setting iptables INPUT policy
+#   shell: "iptables -P INPUT DROP"
+
+- name: Install iptables-persistent
+  package:
+    name: iptables-persistent
+    state: present
+
+- name: Save iptables rules
+  shell: "iptables-save > /etc/iptables/rules.v4"
