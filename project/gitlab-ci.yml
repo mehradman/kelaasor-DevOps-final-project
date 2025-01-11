@@ -7,25 +7,26 @@ variables:
   IMAGE_NAME: "go-web-app"
 
 before_script:
-  - export SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c 1-8)
+  - apt-get update && apt-get install -y jq
+  - export VERSION=$(jq -r .version appinfo.json)
 
 build:
   stage: build
   only:
-    - merge_requests
-  except:
     - main
   script:
-    - docker build -t $REGISTRY/$IMAGE_NAME:$SHORT_SHA .
-    - docker push $REGISTRY/$IMAGE_NAME:$SHORT_SHA
+    - docker build -t $REGISTRY/$IMAGE_NAME:$VERSION .
+    - docker push $REGISTRY/$IMAGE_NAME:$VERSION
 
 deploy:
   stage: deploy
   only:
-    - merge_requests
-  except:
     - main
   script:
-    - echo "Deploying image to Docker Compose"
-    - sed -i "s/\$TAG/$SHORT_SHA/g" docker-compose.yml
-    - docker-compose up -d
+    - echo "Deploying image with blue-green strategy"
+    - sed -i "s/\$TAG/$VERSION/g" docker-compose-blue.yml
+    - docker-compose -f docker-compose-blue.yml up -d
+    - sleep 5 # Wait for the new containers to start
+    - docker-compose -f docker-compose-green.yml up -d
+    - sleep 5 # Wait for the new containers to start
+    - docker exec -it nginx-container nginx -s reload
