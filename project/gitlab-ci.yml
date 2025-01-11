@@ -1,0 +1,31 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  REGISTRY: "localhost:5000"
+  IMAGE_NAME: "go-web-app"
+
+before_script:
+  - export SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c 1-8)
+
+build:
+  stage: build
+  only:
+    - merge_requests
+  except:
+    - main
+  script:
+    - docker build -t $REGISTRY/$IMAGE_NAME:$SHORT_SHA .
+    - docker push $REGISTRY/$IMAGE_NAME:$SHORT_SHA
+
+deploy:
+  stage: deploy
+  only:
+    - merge_requests
+  except:
+    - main
+  script:
+    - echo "Deploying image to Docker Compose"
+    - sed -i "s/\$TAG/$SHORT_SHA/g" docker-compose.yml
+    - docker-compose up -d
