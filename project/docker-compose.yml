@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: "localhost:5000/go-web-app:$TAG"
+    image: "$IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG"
     ports:
-      - "8081:8080"
+      - "$PORT:8080"
     restart: always
