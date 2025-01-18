@@ -32,7 +32,7 @@ Dockerize the application and follow best practices to reduce the size of the im
 - Deploy through Docker Compose on port 8081.
 - The pushed image tag must match the short commit SHA.
 
-## Fifth stage \- CI/CD for stage environment
+## Fifth step \- CI/CD for stage environment
 
 - Build and push to the image registry after each commit or merge request on the main branch.
 - The tag of this image should match the value of the version key in appinfo.json. Bash and jq can be used for this.
