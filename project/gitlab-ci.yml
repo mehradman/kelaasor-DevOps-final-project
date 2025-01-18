@@ -3,30 +3,65 @@ stages:
   - deploy
 
 variables:
-  REGISTRY: "localhost:5000"
-  IMAGE_NAME: "go-web-app"
+  IMAGE_REPO: "localhost:5000"
+  IMAGE_NAME: "Go-Web-App"
 
 before_script:
   - apt-get update && apt-get install -y jq
   - export VERSION=$(jq -r .version appinfo.json)
 
-build:
+.build:
   stage: build
-  only:
-    - main
   script:
-    - docker build -t $REGISTRY/$IMAGE_NAME:$VERSION .
-    - docker push $REGISTRY/$IMAGE_NAME:$VERSION
+    - docker build -t $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG
 
-deploy:
+build_dev:
+  extends: .build
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  only:
+    - merge_requests
+    - dev
+  
+# build_main:
+#   extends: .build
+#   variables:
+#     IMAGE_TAG: $VERSION
+#   only:
+#     - merge_requests
+#     - commits
+#     - main
+
+deploy_dev:
   stage: deploy
   only:
-    - main
+    - merge_requests
+    - dev
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+    PORT: "8081"
   script:
-    - echo "Deploying image with blue-green strategy"
-    - sed -i "s/\$TAG/$VERSION/g" docker-compose-blue.yml
-    - docker-compose -f docker-compose-blue.yml up -d
-    - sleep 5 # Wait for the new containers to start
-    - docker-compose -f docker-compose-green.yml up -d
-    - sleep 5 # Wait for the new containers to start
-    - docker exec -it nginx-container nginx -s reload
+    - echo "Deploying image with Docker Compose"
+    - sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' .env
+    - sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' .env
+    - sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' .env
+    - sed -i 's|PORT=.*|PORT=$PORT|' .env
+    - docker compose up -d
+
+# deploy_main:
+#   stage: deploy
+#   only:
+#     - merge_requests
+#     - commits
+#     - main
+#   variables:
+#     IMAGE_TAG: $VERSION
+#   script:
+#     - echo "Deploying image with blue-green strategy"
+#     - sed -i "s/\$TAG/$VERSION/g" docker-compose-blue.yml
+#     - docker-compose -f docker-compose-blue.yml up -d
+#     - sleep 5 # Wait for the new containers to start
+#     - docker-compose -f docker-compose-green.yml up -d
+#     - sleep 5 # Wait for the new containers to start
+#     - docker exec -it nginx-container nginx -s reload
