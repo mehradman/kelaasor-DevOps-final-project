@@ -7,8 +7,9 @@ variables:
   IMAGE_NAME: "Go-Web-App"
 
 before_script:
-  - apt-get update && apt-get install -y jq
-  - export VERSION=$(jq -r .version appinfo.json)
+  - apt-get update && apt-get install -y jq || { echo 'jq installation failed'; exit 1; }
+  - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+
 
 .build:
   stage: build
