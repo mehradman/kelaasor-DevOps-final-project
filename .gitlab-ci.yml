@@ -1,15 +1,17 @@
-stages:
-  - build
-  - deploy
+image: docker:latest
+
+services:
+  - docker:dind
 
 variables:
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
   IMAGE_REPO: "localhost:5000"
   IMAGE_NAME: "Go-Web-App"
 
 before_script:
-  - apt update && apt install -y jq || { echo 'jq installation failed'; exit 1; }
+  - apk update && apk add jq || { echo 'jq installation failed'; exit 1; }
   - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-
 
 .build:
   stage: build
@@ -24,15 +26,6 @@ build_dev:
   only:
     - merge_requests
     - dev
-  
-# build_main:
-#   extends: .build
-#   variables:
-#     IMAGE_TAG: $VERSION
-#   only:
-#     - merge_requests
-#     - commits
-#     - main
 
 deploy_dev:
   stage: deploy
@@ -49,20 +42,3 @@ deploy_dev:
     - sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' .env
     - sed -i 's|PORT=.*|PORT=$PORT|' .env
     - docker compose up -d
-
-# deploy_main:
-#   stage: deploy
-#   only:
-#     - merge_requests
-#     - commits
-#     - main
-#   variables:
-#     IMAGE_TAG: $VERSION
-#   script:
-#     - echo "Deploying image with blue-green strategy"
-#     - sed -i "s/\$TAG/$VERSION/g" docker-compose-blue.yml
-#     - docker-compose -f docker-compose-blue.yml up -d
-#     - sleep 5 # Wait for the new containers to start
-#     - docker-compose -f docker-compose-green.yml up -d
-#     - sleep 5 # Wait for the new containers to start
-#     - docker exec -it nginx-container nginx -s reload
