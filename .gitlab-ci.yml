@@ -14,8 +14,8 @@ before_script:
 .build:
   stage: build
   script:
-    - sudo docker build -t $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG .
-    - sudo docker push $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG
+    - docker build -t $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG
 
 build_dev:
   extends: .build
