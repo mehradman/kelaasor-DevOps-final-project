@@ -6,7 +6,7 @@ services:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
-  IMAGE_REPO: "185.231.59.103:5000"
+  IMAGE_REPO: "http://185.231.59.103:5000"
   IMAGE_NAME: "go-web-app"
 
 before_script:
