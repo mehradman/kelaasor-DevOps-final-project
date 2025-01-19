@@ -7,7 +7,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
   IMAGE_REPO: "localhost:5000"
-  IMAGE_NAME: "Go-Web-App"
+  IMAGE_NAME: "go-web-app"
 
 before_script:
   - apk update && apk add jq || { echo 'jq installation failed'; exit 1; }
