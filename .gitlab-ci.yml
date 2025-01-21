@@ -1,7 +1,11 @@
-image: docker:latest
+# image: docker:latest
 
-services:
-  - docker:dind
+# services:
+#   - docker:dind
+
+stages:
+  - build
+  - deploy
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
