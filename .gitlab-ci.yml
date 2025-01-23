@@ -7,7 +7,7 @@ variables:
   IMAGE_NAME: "go-web-app"
 
 before_script:
-  - apk update && apk add jq || { echo 'jq installation failed'; exit 1; }
+  - apt update && apt add jq || { echo 'jq installation failed'; exit 1; }
   - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
 
 .build:
