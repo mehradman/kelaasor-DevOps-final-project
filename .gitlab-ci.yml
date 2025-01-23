@@ -3,6 +3,10 @@ stages:
   - deploy
 
 variables:
+<<<<<<< Updated upstream
+=======
+  # DOCKER_OPTS: "--insecure-registry=localhost:5000"
+>>>>>>> Stashed changes
   IMAGE_REPO: "localhost:5000"
   IMAGE_NAME: "go-web-app"
 
