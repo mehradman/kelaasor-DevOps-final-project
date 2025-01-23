@@ -1,13 +1,5 @@
 version: "3.5"
 
-networks:
-  web_net:
-    name: web_net
-    external: true
-  app_net:
-    name: app_net
-    external: true
-
 services:
   dind:
     image: docker:20-dind
@@ -28,9 +20,6 @@ services:
       - ./config:/etc/gitlab-runner:z
       - ./data/runner/cache:/cache
       - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - app_net
-      - web_net
     environment:
       - DOCKER_HOST=tcp://dind:2375
 
