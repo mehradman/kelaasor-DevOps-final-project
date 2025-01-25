@@ -3,8 +3,8 @@ stages:
   - deploy
 
 variables:
-  # DOCKER_OPTS: "--insecure-registry=localhost:5000"
-  IMAGE_REPO: "localhost:5000"
+  # DOCKER_OPTS: "--insecure-registry=registry:5000"
+  IMAGE_REPO: "registry:5000"
   IMAGE_NAME: "go-web-app"
 
 before_script:
