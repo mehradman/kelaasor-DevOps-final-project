@@ -24,6 +24,7 @@
       - /etc/docker/registry:/var/lib/registry
     published_ports:
       - "5000:5000"
+    hostname: "registry"
     networks:
       - name: web_net
       - name: app_net
