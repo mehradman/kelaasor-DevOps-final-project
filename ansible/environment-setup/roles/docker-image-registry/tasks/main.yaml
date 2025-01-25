@@ -1,12 +1,18 @@
+# - name: Create external network web_net
+#   docker_network:
+#     name: web_net
+#     driver: bridge
+
 - name: Create external network web_net
-  docker_network:
-    name: web_net
-    driver: bridge
+  shell: "docker network create web_net -o com.docker.network.bridge.name=web_net"
+
+# - name: Create external network app_net
+#   docker_network:
+#     name: app_net
+#     driver: bridge
 
 - name: Create external network app_net
-  docker_network:
-    name: app_net
-    driver: bridge
+  shell: "docker network create app_net -o com.docker.network.bridge.name=app_net"
 
 - name: Create Docker Registry
   docker_container:
