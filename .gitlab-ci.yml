@@ -8,8 +8,8 @@ variables:
   IMAGE_NAME: "go-web-app"
 
 before_script:
-  - apt update
-  - apt install jq -y || { echo 'jq installation failed'; exit 1; }
+  - apk update
+  - apk install jq -y || { echo 'jq installation failed'; exit 1; }
   - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
 
 .build:
