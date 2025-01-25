@@ -11,6 +11,11 @@
     src: "{{ role_path }}/templates/.env"
     dest: /root/gitlab-runner/
 
+- name: Copy daemon.json file
+  copy:
+    src: "{{ role_path }}/templates/daemon.json"
+    dest: /root/gitlab-runner/
+
 - name: Copy Docker Compose file
   copy:
     src: "{{ role_path }}/templates/docker-compose.yaml"

@@ -10,6 +10,7 @@ services:
     command:
       - --storage-driver=overlay2
     volumes:
+      - /root/gitlab-runner/daemon.json:/etc/docker/daemon.json
       - ./data/dind/docker:/var/lib/docker
     networks:
       - web_net
