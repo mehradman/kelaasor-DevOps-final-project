@@ -42,6 +42,7 @@ services:
       - register
       - --non-interactive
       - --locked=false
+      - --network_mode="web_net"
       - --name=${RUNNER_NAME}
       - --executor=docker
       - --docker-image=docker:24.0.5-dind

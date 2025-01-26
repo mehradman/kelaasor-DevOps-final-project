@@ -23,14 +23,20 @@ build_dev:
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
   only:
-    - merge_requests
     - dev
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev"
+      if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
 
 deploy_dev:
   stage: deploy
   only:
-    - merge_requests
     - dev
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev"
+      if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
