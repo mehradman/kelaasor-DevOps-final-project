@@ -1,1 +1,3 @@
 ansible/environment-setup/roles/gitlab-runner/templates/.env
+
+info.txt
