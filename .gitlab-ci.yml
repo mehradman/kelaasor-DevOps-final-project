@@ -36,7 +36,7 @@ deploy_dev:
     - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
   script:
     - echo "Deploying image with Docker Compose"
-    - apt-get update && apt-get install openssh
+    - apt update && apt install openssh-client
     - chmod og=$ID_RSA
     # - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
     - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
