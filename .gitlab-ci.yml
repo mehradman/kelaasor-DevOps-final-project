@@ -32,7 +32,7 @@ deploy_dev:
     PORT: "8081"
   before_script:
     - apt-get update
-    - apt-get install jq || { echo 'jq installation failed'; exit 1; }
+    - apt-get install jq -y || { echo 'jq installation failed'; exit 1; }
     - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
   script:
     - echo "Deploying image with Docker Compose"
