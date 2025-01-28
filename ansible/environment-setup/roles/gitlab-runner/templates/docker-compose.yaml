@@ -45,7 +45,7 @@ services:
       - --name=${RUNNER_NAME}
       - --executor=docker
       - --docker-privileged
-      - --docker-network-mode=web_net
+      # - --docker-network-mode=web_net
       - --docker-image=docker:24.0.5-dind
       - --docker-volumes=/var/run/docker.sock:/var/run/docker.sock
     volumes:
