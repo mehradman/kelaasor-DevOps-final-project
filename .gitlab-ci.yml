@@ -7,8 +7,6 @@ variables:
   IMAGE_REPO: "registry:5000"
   IMAGE_NAME: "go-web-app"
 
-
-
 .build:
   stage: build
   script:
@@ -23,21 +21,17 @@ build_dev:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "dev"
 
 deploy_dev:
-  image: ubuntu:22.04
+  image: alpine
   stage: deploy
   rules:
     - !reference [build_dev, rules]
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
-  before_script:
-    - apt-get update
-    - apt-get install jq -y || { echo 'jq installation failed'; exit 1; }
-    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
   script:
     - echo "Deploying image with Docker Compose"
-    - apt update && apt install openssh-client -y
-    - chmod 400 $ID_RSA
+    - apk update && apk install openssh-client
+    - chmod og="${ID_RSA}"
     # - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
     - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         mkdir -p /root/stage-deploy/ &&
@@ -60,6 +54,10 @@ deploy_dev:
 #       - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
 #         when: never
 #       - if: $CI_COMMIT_BRANCH && $CI_COMMIT_REF_NAME == "main"
+  # before_script:
+  #   - apk update
+  #   - apk add jq || { echo 'jq installation failed'; exit 1; }
+  #   - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
 
 # deploy_stage:
 #   stage: deploy
