@@ -30,7 +30,7 @@ deploy_dev:
     PORT: "8081"
   script:
     - echo "Deploying image with Docker Compose"
-    - apk update && apk install openssh-client
+    - apk update && apk add openssh-client
     - chmod og="${ID_RSA}"
     # - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
     - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
