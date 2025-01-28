@@ -26,6 +26,7 @@ build_dev:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "dev"
 
 deploy_dev:
+  image: alpine:latest
   stage: deploy
   rules:
     - !reference [build_dev, rules]
@@ -34,8 +35,36 @@ deploy_dev:
     PORT: "8081"
   script:
     - echo "Deploying image with Docker Compose"
-    - sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' .env
-    - sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' .env
-    - sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' .env
-    - sed -i 's|PORT=.*|PORT=$PORT|' .env
-    - docker compose up -d
+    - chmod og= $ID_RSA
+    - apk update && apk add openssh-client
+    # - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        mkdir -p /root/stage-deploy/ &&
+        sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' /root/stage-deploy/.env &&
+        sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' /root/stage-deploy/.env &&
+        sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' /root/stage-deploy/.env &&
+        sed -i 's|PORT=.*|PORT=$PORT|' /root/stage-deploy/.env"
+    - scp -i $ID_RSA -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/root/stage-deploy/
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        docker compose -f /root/stage-deploy/docker-compose.yml down && 
+        docker compose -f /root/stage-deploy/docker-compose.yml up -d"
+
+# build_stage:
+#   extends: .build
+#   variables:
+#     IMAGE_TAG: $VERSION
+#   workflow:
+#     rules:
+#       - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "main"
+#       - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+#         when: never
+#       - if: $CI_COMMIT_BRANCH && $CI_COMMIT_REF_NAME == "main"
+
+# deploy_stage:
+#   stage: deploy
+#   workflow:
+#     rules:
+#       - !reference [build_stage, rules]
+#   variables:
+#     IMAGE_TAG: $VERSION
+
