@@ -21,17 +21,24 @@ build_dev:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "dev"
 
 deploy_dev:
-  image: alpine
+  image: ubuntu:22.04
   stage: deploy
   rules:
     - !reference [build_dev, rules]
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$ID_RSA_DEPLOYMENT"
+    - ssh-add "$ID_RSA_DEPLOYMENT"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
   script:
     - echo "Deploying image with Docker Compose"
-    - apk update && apk add openssh-client
-    - chmod 400 ID_RSA_DEPLOYMENT
+    # - apk update && apk add openssh-client
+    # - chmod 400 ID_RSA_DEPLOYMENT
     # - ssh -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
     - ssh -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         mkdir -p /root/stage-deploy/ &&
