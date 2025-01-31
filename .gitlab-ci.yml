@@ -24,19 +24,25 @@ build_dev:
   rules:
     - !reference [.dev_rules, rules]
 
-deploy_dev:
+.deploy:
   image: ubuntu:22.04
   stage: deploy
-  rules:
-    - !reference [.dev_rules, rules]
   variables:
-    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-    PORT: "8081"
     IMAGE_REPO: "localhost:5000"
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
     - echo "${ID_RSA_DEPLOYMENT}" | ssh-add -
+
+deploy_dev:
+  extends: .deploy
+  environment:
+    name: dev
+  rules:
+    - !reference [.dev_rules, rules]
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+    PORT: "8081"
   script:
     - echo "Deploying image with Docker Compose"
     # - apk update && apk add openssh-client
@@ -54,26 +60,24 @@ deploy_dev:
         docker compose -f /home/deployer/stage-deploy/docker-compose.yml down && 
         docker compose -f /home/deployer/stage-deploy/docker-compose.yml up -d"
 
-# build_stage:
-#   extends: .build
-#   variables:
-#     IMAGE_TAG: $VERSION
-#   workflow:
-#     rules:
-#       - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "main"
-#       - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-#         when: never
-#       - if: $CI_COMMIT_BRANCH && $CI_COMMIT_REF_NAME == "main"
-  # before_script:
-  #   - apk update
-  #   - apk add jq || { echo 'jq installation failed'; exit 1; }
-  #   - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+build_stage:
+  extends: .build
+  variables:
+    IMAGE_TAG: $VERSION
+  
+  only:
+    - main
+  before_script:
+    - apk update
+    - apk add jq || { echo 'jq installation failed'; exit 1; }
+    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
 
-# deploy_stage:
-#   stage: deploy
-#   workflow:
-#     rules:
-#       - !reference [build_stage, rules]
-#   variables:
-#     IMAGE_TAG: $VERSION
+deploy_stage:
+  extends: .deploy
+  environment:
+    name: stage
+  only:
+    - main
+  variables:
+    IMAGE_TAG: $VERSION
 
