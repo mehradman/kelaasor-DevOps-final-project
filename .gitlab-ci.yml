@@ -13,41 +13,42 @@ variables:
     - docker build -t $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG
 
+.dev_rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
 build_dev:
   extends: .build
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_NAME == "dev"
+    - !reference [.dev_rules, rules]
 
 deploy_dev:
   image: ubuntu:22.04
   stage: deploy
   rules:
-    - !reference [build_dev, rules]
+    - !reference [.dev_rules, rules]
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
-    - chmod 400 "$ID_RSA_DEPLOYMENT"
-    - ssh-add "$ID_RSA_DEPLOYMENT"
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - echo "${ID_RSA_DEPLOYMENT}" | ssh-add -
   script:
     - echo "Deploying image with Docker Compose"
     # - apk update && apk add openssh-client
-    # - chmod 400 ID_RSA_DEPLOYMENT
-    # - ssh -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
-    - ssh -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+    # - chmod 400 $ID_RSA_DEPLOYMENT
+    # - ssh -i $ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         mkdir -p /root/stage-deploy/ &&
         sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' /root/stage-deploy/.env &&
         sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' /root/stage-deploy/.env &&
         sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' /root/stage-deploy/.env &&
         sed -i 's|PORT=.*|PORT=$PORT|' /root/stage-deploy/.env"
-    - scp -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/root/stage-deploy/
-    - ssh -i ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/root/stage-deploy/
+    - ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         docker compose -f /root/stage-deploy/docker-compose.yml down && 
         docker compose -f /root/stage-deploy/docker-compose.yml up -d"
 
