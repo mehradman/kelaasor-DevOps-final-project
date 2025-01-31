@@ -41,8 +41,9 @@ deploy_dev:
     # - apk update && apk add openssh-client
     # - chmod 400 $ID_RSA_DEPLOYMENT
     # - ssh -i $ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/stage-deploy/"
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/stage-deploy/
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
-        mkdir -p /home/deployer/stage-deploy/ &&
         sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' /home/deployer/stage-deploy/.env &&
         sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' /home/deployer/stage-deploy/.env &&
         sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' /home/deployer/stage-deploy/.env &&
