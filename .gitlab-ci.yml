@@ -32,6 +32,7 @@ deploy_dev:
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
+    IMAGE_REPO: "localhost:5000"
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
