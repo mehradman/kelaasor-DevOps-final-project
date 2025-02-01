@@ -24,6 +24,17 @@ build_dev:
   rules:
     - !reference [.dev_rules, rules]
 
+build_stage:
+  extends: .build
+  variables:
+    IMAGE_TAG: $VERSION
+  only:
+    - main
+  before_script:
+    - apk update
+    - apk add jq || { echo 'jq installation failed'; exit 1; }
+    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+
 .deploy:
   image: ubuntu:22.04
   stage: deploy
@@ -60,18 +71,6 @@ deploy_dev:
         docker compose -f /home/deployer/stage-deploy/docker-compose.yml down && 
         docker compose -f /home/deployer/stage-deploy/docker-compose.yml up -d"
 
-build_stage:
-  extends: .build
-  variables:
-    IMAGE_TAG: $VERSION
-  
-  only:
-    - main
-  before_script:
-    - apk update
-    - apk add jq || { echo 'jq installation failed'; exit 1; }
-    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-
 deploy_stage:
   extends: .deploy
   environment:
@@ -80,4 +79,15 @@ deploy_stage:
     - main
   variables:
     IMAGE_TAG: $VERSION
-
+  script:
+    - echo "Blue Green Deployment"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/blue/"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/green/"
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/blue/
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/green/
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/blue/
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
+    - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        chmod 400 /home/deployer/blue-green.sh &&
+        /home/deployer/blue-green.sh"
