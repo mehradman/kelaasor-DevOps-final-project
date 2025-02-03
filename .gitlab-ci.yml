@@ -88,5 +88,5 @@ deploy_stage:
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
     - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
-        chmod 400 /home/deployer/blue-green.sh &&
+        chmod 500 /home/deployer/blue-green.sh &&
         /home/deployer/blue-green.sh"
