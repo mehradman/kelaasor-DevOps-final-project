@@ -26,14 +26,13 @@ build_dev:
 
 build_stage:
   extends: .build
-  variables:
-    IMAGE_TAG: $VERSION
   only:
     - main
   before_script:
     - apk update
     - apk add jq || { echo 'jq installation failed'; exit 1; }
     - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+    - $IMAGE_TAG=$VERSION
 
 .deploy:
   image: ubuntu:22.04
