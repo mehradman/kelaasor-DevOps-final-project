@@ -43,6 +43,10 @@ build_stage:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
     - echo "${ID_RSA_DEPLOYMENT}" | ssh-add -
+    - apt update
+    - apt install jq -y || { echo 'jq installation failed'; exit 1; }
+    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+    - export IMAGE_TAG=$VERSION
 
 deploy_dev:
   extends: .deploy
@@ -79,11 +83,6 @@ deploy_stage:
   variables:
     BLUE_PORT: "8082"
     GREEN_PORT: "8083"
-  before_script:
-    - apt update
-    - apt install jq -y || { echo 'jq installation failed'; exit 1; }
-    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-    - export IMAGE_TAG=$VERSION
   script:
     - echo "Blue Green Deployment"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/blue/"
