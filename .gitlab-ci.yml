@@ -89,8 +89,8 @@ deploy_stage:
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
     - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/script/
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
-        IMAGE_REPO=$IMAGE_REPO && 
-        IMAGE_NAME=$IMAGE_NAME && 
-        IMAGE_TAG=$IMAGE_TAG &&
+        export IMAGE_REPO=$IMAGE_REPO && 
+        export IMAGE_NAME=$IMAGE_NAME && 
+        export IMAGE_TAG=$IMAGE_TAG &&
         chmod 500 /home/deployer/blue-green.sh &&
         /home/deployer/blue-green.sh"
