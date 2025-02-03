@@ -78,19 +78,25 @@ deploy_stage:
     - main
   variables:
     IMAGE_TAG: $VERSION
+    BLUE_PORT: "8082"
+    GREEN_PORT: "8083"
   script:
     - echo "Blue Green Deployment"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/blue/"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/green/"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/script/"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/config/"
     - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/blue/
     - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/green/
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/blue/
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
     - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/script/
+    - scp -o StrictHostKeyChecking=no ./nginx.conf $SERVER_USER@$SERVER_IP:/home/deployer/config/
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         export IMAGE_REPO=$IMAGE_REPO && 
         export IMAGE_NAME=$IMAGE_NAME && 
         export IMAGE_TAG=$IMAGE_TAG &&
+        export BLUE_PORT=$BLUE_PORT &&
+        export GREEN_PORT=$GREEN_PORT &&
         chmod 500 /home/deployer/blue-green.sh &&
         /home/deployer/blue-green.sh"
