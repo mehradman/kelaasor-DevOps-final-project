@@ -1,5 +1,11 @@
 #!/bin/bash
 
+IMAGE_REPO=$1
+IMAGE_NAME=$2
+IMAGE_TAG=$3
+BLUE_PORT=8082
+GREEN_PORT=8083
+
 sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' /home/deployer/blue/.env
 sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' /home/deployer/blue/.env
 sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' /home/deployer/blue/.env
