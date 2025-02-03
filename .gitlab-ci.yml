@@ -91,4 +91,4 @@ deploy_stage:
     # - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
     #     chmod 500 /home/deployer/blue-green.sh &&
     #     /home/deployer/blue-green.sh"
-    - ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP 'bash -s' < ./blue-green.sh.sh
+    - ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP 'bash -s' < ./blue-green.sh
