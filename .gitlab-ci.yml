@@ -46,7 +46,6 @@ build_stage:
     - apt update
     - apt install jq -y || { echo 'jq installation failed'; exit 1; }
     - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-    - export IMAGE_TAG=$VERSION
 
 deploy_dev:
   extends: .deploy
@@ -98,7 +97,7 @@ deploy_stage:
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
         export IMAGE_REPO=$IMAGE_REPO && 
         export IMAGE_NAME=$IMAGE_NAME && 
-        export IMAGE_TAG=$IMAGE_TAG &&
+        export IMAGE_TAG=$VERSION &&
         export BLUE_PORT=$BLUE_PORT &&
         export GREEN_PORT=$GREEN_PORT &&
         chmod 700 /home/deployer/script/blue-green.sh &&
