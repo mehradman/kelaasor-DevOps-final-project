@@ -82,12 +82,13 @@ deploy_stage:
     - echo "Blue Green Deployment"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/blue/"
     - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/green/"
-    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/script/"
+    # - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/script/"
     - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/blue/
     - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/green/
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/blue/
     - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
-    - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/script/
-    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
-        chmod 500 /home/deployer/blue-green.sh &&
-        /home/deployer/blue-green.sh"
+    # - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/script/
+    # - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+    #     chmod 500 /home/deployer/blue-green.sh &&
+    #     /home/deployer/blue-green.sh"
+    - ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP 'bash -s' < ./blue-green.sh.sh
