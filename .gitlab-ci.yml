@@ -81,7 +81,7 @@ deploy_stage:
     GREEN_PORT: "8083"
   before_script:
     - apt update
-    - apt add jq -y || { echo 'jq installation failed'; exit 1; }
+    - apt install jq -y || { echo 'jq installation failed'; exit 1; }
     - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
     - export IMAGE_TAG=$VERSION
   script:
