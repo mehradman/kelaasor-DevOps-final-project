@@ -101,5 +101,5 @@ deploy_stage:
         export IMAGE_TAG=$IMAGE_TAG &&
         export BLUE_PORT=$BLUE_PORT &&
         export GREEN_PORT=$GREEN_PORT &&
-        chmod 500 /home/deployer/script/blue-green.sh &&
+        chmod 700 /home/deployer/script/blue-green.sh &&
         /home/deployer/script/blue-green.sh"
