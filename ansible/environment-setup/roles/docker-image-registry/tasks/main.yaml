@@ -27,4 +27,4 @@
     hostname: "registry"
     networks:
       - name: web_net
-      - name: app_net
+      # - name: app_net

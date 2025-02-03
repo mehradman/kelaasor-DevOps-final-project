@@ -7,37 +7,87 @@ variables:
   IMAGE_REPO: "registry:5000"
   IMAGE_NAME: "go-web-app"
 
-before_script:
-  - apk update
-  - apk add jq || { echo 'jq installation failed'; exit 1; }
-  - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-
 .build:
   stage: build
   script:
     - docker build -t $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_REPO/$IMAGE_NAME:$IMAGE_TAG
 
+.dev_rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "dev" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
 build_dev:
   extends: .build
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  rules:
+    - !reference [.dev_rules, rules]
+
+build_stage:
+  extends: .build
+  variables:
+    IMAGE_TAG: $VERSION
   only:
-    - merge_requests
-    - dev
+    - main
+  before_script:
+    - apk update
+    - apk add jq || { echo 'jq installation failed'; exit 1; }
+    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+
+.deploy:
+  image: ubuntu:22.04
+  stage: deploy
+  variables:
+    IMAGE_REPO: "localhost:5000"
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "${ID_RSA_DEPLOYMENT}" | ssh-add -
 
 deploy_dev:
-  stage: deploy
-  only:
-    - merge_requests
-    - dev
+  extends: .deploy
+  environment:
+    name: dev
+  rules:
+    - !reference [.dev_rules, rules]
   variables:
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     PORT: "8081"
   script:
     - echo "Deploying image with Docker Compose"
-    - sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' .env
-    - sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' .env
-    - sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' .env
-    - sed -i 's|PORT=.*|PORT=$PORT|' .env
-    - docker compose up -d
+    # - apk update && apk add openssh-client
+    # - chmod 400 $ID_RSA_DEPLOYMENT
+    # - ssh -i $ID_RSA_DEPLOYMENT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "command"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/stage-deploy/"
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/stage-deploy/
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        sed -i 's|IMAGE_REPO=.*|IMAGE_REPO=$IMAGE_REPO|' /home/deployer/stage-deploy/.env &&
+        sed -i 's|IMAGE_NAME=.*|IMAGE_NAME=$IMAGE_NAME|' /home/deployer/stage-deploy/.env &&
+        sed -i 's|IMAGE_TAG=.*|IMAGE_TAG=$IMAGE_TAG|' /home/deployer/stage-deploy/.env &&
+        sed -i 's|PORT=.*|PORT=$PORT|' /home/deployer/stage-deploy/.env"
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/stage-deploy/
+    - ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        docker compose -f /home/deployer/stage-deploy/docker-compose.yml down && 
+        docker compose -f /home/deployer/stage-deploy/docker-compose.yml up -d"
+
+deploy_stage:
+  extends: .deploy
+  environment:
+    name: stage
+  only:
+    - main
+  variables:
+    IMAGE_TAG: $VERSION
+  script:
+    - echo "Blue Green Deployment"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/blue/"
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p /home/deployer/green/"
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/blue/
+    - scp -o StrictHostKeyChecking=no ./.env $SERVER_USER@$SERVER_IP:/home/deployer/green/
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/blue/
+    - scp -o StrictHostKeyChecking=no ./docker-compose.yml $SERVER_USER@$SERVER_IP:/home/deployer/green/
+    - scp -o StrictHostKeyChecking=no ./blue-green.sh $SERVER_USER@$SERVER_IP:/home/deployer/
+    - ssh  -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        chmod 400 /home/deployer/blue-green.sh &&
+        /home/deployer/blue-green.sh"

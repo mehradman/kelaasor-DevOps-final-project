@@ -14,7 +14,7 @@ services:
       - ./data/dind/docker:/var/lib/docker
     networks:
       - web_net
-      - app_net
+      # - app_net
     
 
   runner:
@@ -28,7 +28,7 @@ services:
       - DOCKER_HOST=tcp://dind:2375
     networks:
       - web_net
-      - app_net
+      # - app_net
 
   register-runner:
     restart: 'no'
@@ -44,6 +44,8 @@ services:
       - --locked=false
       - --name=${RUNNER_NAME}
       - --executor=docker
+      - --docker-privileged
+      # - --docker-network-mode=web_net
       - --docker-image=docker:24.0.5-dind
       - --docker-volumes=/var/run/docker.sock:/var/run/docker.sock
     volumes:
@@ -51,12 +53,12 @@ services:
       - ./data/dind/docker:/var/lib/docker
     networks:
       - web_net
-      - app_net
+      # - app_net
 
 networks:
-  app_net:
-    external: true
-    name: app_net
+  # app_net:
+  #   external: true
+  #   name: app_net
   web_net:
     external: true
     name: web_net
