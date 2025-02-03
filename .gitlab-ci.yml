@@ -7,6 +7,11 @@ variables:
   IMAGE_REPO: "registry:5000"
   IMAGE_NAME: "go-web-app"
 
+before_script:
+  - apk update
+  - apk add jq || { echo 'jq installation failed'; exit 1; }
+  - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
+
 .build:
   stage: build
   script:
@@ -28,11 +33,8 @@ build_stage:
   extends: .build
   only:
     - main
-  before_script:
-    - apk update
-    - apk add jq || { echo 'jq installation failed'; exit 1; }
-    - export VERSION=$(jq -r .version appinfo.json) || { echo 'Failed to get version'; exit 1; }
-    - export IMAGE_TAG=$VERSION
+  variables:
+    IMAGE_TAG: $VERSION
 
 .deploy:
   image: ubuntu:22.04
